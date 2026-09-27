@@ -1,47 +1,82 @@
 import React, { useState } from 'react';
 import { 
-  User, ShieldCheck, Lock, Mail, ArrowRight, Sparkles, 
-  Eye, EyeOff, CheckCircle2, GraduationCap, Building
+  User, ShieldCheck, Lock, Mail, ArrowRight, 
+  Eye, EyeOff, GraduationCap, Building, AlertCircle
 } from 'lucide-react';
+import { authService } from '../services/authService';
 
 export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, onCancel }) {
   const [authMode, setAuthMode] = useState(initialAuthMode); // 'login' | 'signup'
   const [role, setRole] = useState('student'); // 'student' | 'admin' | 'superadmin'
-  const [fullName, setFullName] = useState('Rahul Sharma');
-  const [rollNo, setRollNo] = useState('2024CS104');
-  const [email, setEmail] = useState('rahul.sharma@campus.edu');
-  const [password, setPassword] = useState('••••••••••••');
+  const [fullName, setFullName] = useState('');
+  const [rollNo, setRollNo] = useState('');
+  const [department, setDepartment] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
+    setErrorMessage('');
     if (newRole === 'student') {
       setEmail('rahul.sharma@campus.edu');
       setFullName('Rahul Sharma');
+      setRollNo('2024CS104');
+      setPassword('password123');
     } else if (newRole === 'admin') {
       setEmail('warden.hostel@campus.edu');
       setFullName('Dr. V. K. Malhotra');
+      setDepartment('Hostel Administration');
+      setPassword('password123');
     } else {
       setEmail('admin.control@campus.edu');
       setFullName('System Admin');
+      setDepartment('Central IT & Administration');
+      setPassword('password123');
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
 
-    setTimeout(() => {
+    try {
+      let authenticatedUser;
+      if (authMode === 'login') {
+        authenticatedUser = await authService.signIn({ email, password });
+      } else {
+        authenticatedUser = await authService.signUp({
+          email,
+          password,
+          fullName: fullName || email.split('@')[0],
+          role,
+          rollNo: role === 'student' ? (rollNo || '2026CS101') : undefined,
+          department: role === 'admin' ? (department || 'Hostel Administration') : undefined
+        });
+      }
+
       setIsLoading(false);
-      onLoginSuccess({
-        role,
-        email,
-        name: fullName || (role === 'student' ? 'Rahul Sharma' : role === 'admin' ? 'Dr. V. K. Malhotra (Warden)' : 'Campus IT Admin'),
-        rollNo: role === 'student' ? rollNo : undefined,
-        department: role === 'admin' ? 'Hostel Administration' : undefined
-      });
-    }, 600);
+      onLoginSuccess(authenticatedUser);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Authentication failed. Please check your credentials.');
+    }
+  };
+
+  const handleOAuthLogin = async (provider) => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      const user = await authService.signInWithOAuth(provider);
+      setIsLoading(false);
+      onLoginSuccess(user);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage(err.message || `Failed to sign in with ${provider}.`);
+    }
   };
 
   return (
@@ -51,7 +86,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Login Card Container */}
-      <div className="w-full max-w-md bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 space-y-6 backdrop-blur-md transition-colors">
+      <div className="w-full max-w-md bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 space-y-5 backdrop-blur-md transition-colors">
         
         {/* Brand Logo & Title Header */}
         <div className="text-center space-y-2">
@@ -66,7 +101,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           <div className="flex items-center justify-center gap-2 pt-1">
             <button
               type="button"
-              onClick={() => setAuthMode('login')}
+              onClick={() => { setAuthMode('login'); setErrorMessage(''); }}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 authMode === 'login'
                   ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
@@ -77,7 +112,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             </button>
             <button
               type="button"
-              onClick={() => setAuthMode('signup')}
+              onClick={() => { setAuthMode('signup'); setErrorMessage(''); }}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 authMode === 'signup'
                   ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
@@ -88,15 +123,23 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             </button>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight pt-1">
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight pt-1">
             {authMode === 'login' ? 'Sign in to Campus Connect' : 'Create Campus Account'}
           </h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
             {authMode === 'login'
               ? 'Unified student query routing & college administration portal'
-              : 'Register your college student or staff identity for smart routing'}
+              : 'Register your college student or staff identity for real query routing'}
           </p>
         </div>
+
+        {/* Error Banner */}
+        {errorMessage && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-start gap-2 animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Role Selection Tabs */}
         <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800 rounded-xl">
@@ -140,12 +183,71 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           </button>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Login / Register Form */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+
+          {/* Additional Sign Up Fields */}
+          {authMode === 'signup' && (
+            <>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+              </div>
+
+              {role === 'student' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                    Student Roll Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={rollNo}
+                    onChange={(e) => setRollNo(e.target.value)}
+                    placeholder="e.g. 2024CS104"
+                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+              )}
+
+              {role === 'admin' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                    Assigned Department
+                  </label>
+                  <select
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                  >
+                    <option value="Hostel Administration">Hostel Administration & Warden</option>
+                    <option value="Academic Office">Academic & Exam Branch</option>
+                    <option value="Accounts & Finance">Accounts & Fee Section</option>
+                    <option value="IT Support & ERP">IT Support & ERP Cell</option>
+                    <option value="Library Services">Library Services</option>
+                  </select>
+                </div>
+              )}
+            </>
+          )}
           
           {/* Email Field */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
               College Email / ID
             </label>
             <div className="relative">
@@ -157,7 +259,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@campus.edu"
+                placeholder="user@campus.edu"
                 className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500 font-medium"
               />
             </div>
@@ -165,13 +267,15 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
 
           {/* Password Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Password
               </label>
-              <span className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium">
-                Forgot password?
-              </span>
+              {authMode === 'login' && (
+                <span className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium">
+                  Forgot password?
+                </span>
+              )}
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -229,14 +333,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Google Sign In */}
             <button
               type="button"
-              onClick={() => {
-                onLoginSuccess({
-                  role: role,
-                  email: 'rahul.sharma@gmail.com',
-                  name: 'Rahul Sharma',
-                  rollNo: '2024CS104'
-                });
-              }}
+              onClick={() => handleOAuthLogin('google')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -251,14 +348,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Apple Sign In */}
             <button
               type="button"
-              onClick={() => {
-                onLoginSuccess({
-                  role: role,
-                  email: 'rahul.sharma@icloud.com',
-                  name: 'Rahul Sharma',
-                  rollNo: '2024CS104'
-                });
-              }}
+              onClick={() => handleOAuthLogin('apple')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4 fill-current text-slate-900 dark:text-white" viewBox="0 0 24 24">
@@ -270,19 +360,12 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Microsoft Sign In */}
             <button
               type="button"
-              onClick={() => {
-                onLoginSuccess({
-                  role: role,
-                  email: 'rahul.sharma@campus.edu',
-                  name: 'Rahul Sharma',
-                  rollNo: '2024CS104'
-                });
-              }}
+              onClick={() => handleOAuthLogin('azure')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 23 23">
                 <path fill="#f35325" d="M1 1h10v10H1z"/>
-                <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                <path fill="#81bc06" d="M12 1h10v10H1z"/>
                 <path fill="#05a6f0" d="M1 12h10v10H1z"/>
                 <path fill="#ffba08" d="M12 12h10v10H12z"/>
               </svg>

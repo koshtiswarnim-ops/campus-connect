@@ -9,6 +9,9 @@ import SmartQueryModal from './components/SmartQueryModal';
 import LoginPage from './components/LoginPage';
 import BottomNav from './components/BottomNav';
 import { INITIAL_QUERIES } from './data/mockData';
+import { authService } from './services/authService';
+import { isRealSupabaseConfigured } from './services/supabaseClient';
+import { ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [activeView, setActiveView] = useState('landing'); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'login'
@@ -21,17 +24,14 @@ export default function App() {
 
   const [selectedTicket, setSelectedTicket] = useState(queries[0]);
   
-  // User Authentication State (default Student: Rahul Sharma)
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Rahul Sharma',
-    email: 'rahul.sharma@campus.edu',
-    role: 'student',
-    rollNo: '2024CS104'
-  });
-
+  // User Authentication State loaded via authService
+  const [currentUser, setCurrentUser] = useState(() => authService.getActiveUser());
   const [authMode, setAuthMode] = useState('login');
   
-  // Smart Modal state
+  // Access Denied Modal state for RBAC guard
+  const [unauthorizedNotice, setUnauthorizedNotice] = useState(null);
+
+  // Smart Query Creation Modal state
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   const [modalDefaultText, setModalDefaultText] = useState("");
 
@@ -45,6 +45,23 @@ export default function App() {
     document.documentElement.classList.add('dark');
   }, []);
 
+  // View Navigation Handler with RBAC Authorization Guard
+  const handleViewChange = (targetView) => {
+    if (targetView === 'admin') {
+      const isAllowed = authService.isAuthorizedForView(currentUser, 'admin');
+      if (!isAllowed) {
+        setUnauthorizedNotice({
+          title: "Staff & Admin Desk — Restricted Access",
+          message: `Your current logged-in role (${currentUser?.role || 'Guest'}) does not have Warden/Staff privileges. Please sign in with a Staff or Admin account to access the Administration Desk.`,
+          requiredRole: 'admin'
+        });
+        return;
+      }
+    }
+
+    setActiveView(targetView);
+  };
+
   const handleOpenQueryModal = (presetText = "") => {
     setModalDefaultText(presetText);
     setIsQueryModalOpen(true);
@@ -57,6 +74,7 @@ export default function App() {
 
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData);
+    setUnauthorizedNotice(null);
     if (userData.role === 'admin' || userData.role === 'superadmin') {
       setActiveView('admin');
     } else {
@@ -64,7 +82,8 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.signOut();
     setCurrentUser(null);
     setActiveView('landing');
   };
@@ -80,7 +99,7 @@ export default function App() {
         const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const updatedTimeline = [
           ...q.timeline,
-          { status: newStatus, time: timeNow, note: `Status updated to ${newStatus} by Administration (${currentUser?.name || 'Staff'})` }
+          { status: newStatus, time: timeNow, note: `Status updated to ${newStatus} by ${currentUser?.name || 'Staff'}` }
         ];
         return {
           ...q,
@@ -123,35 +142,6 @@ export default function App() {
     }
   };
 
-  // 1-Click Live Hackathon Demo Workflow Runner
-  const handleRunAutoDemo = () => {
-    const demoTicket = {
-      id: `CC-2026-10482`,
-      title: "Hostel Administration · Hostel maintenance",
-      studentSays: "There is a water problem in my hostel room 304, Block B.",
-      category: "Hostel maintenance",
-      department: "Hostel Administration",
-      assignedTo: "Warden / Hostel Office (Mr. Ramesh Kumar)",
-      priority: "Normal",
-      status: "Submitted",
-      isAnonymous: false,
-      studentName: "Rahul Sharma (Roll: 2024CS104)",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      timeline: [
-        { status: "Submitted", time: "Just Now", note: "Request raised by Rahul Sharma. Intent: Hostel Water Leakage." },
-        { status: "Assigned", time: "Just Now", note: "Smart-routed to Hostel Maintenance & Warden Office" }
-      ],
-      replies: [
-        { sender: "System AI", text: "Query auto-categorized under Hostel Maintenance -> Water Issue. Assigned to Warden Office.", time: "Just Now" }
-      ]
-    };
-
-    setQueries(prev => [demoTicket, ...prev.filter(q => q.id !== 'CC-2026-10482')]);
-    setSelectedTicket(demoTicket);
-    setActiveView('tracking');
-  };
-
   if (activeView === 'login') {
     return (
       <LoginPage
@@ -168,7 +158,7 @@ export default function App() {
       {/* Navbar Header */}
       <Navbar
         activeView={activeView}
-        setActiveView={setActiveView}
+        setActiveView={handleViewChange}
         onOpenNewQuery={() => handleOpenQueryModal("I have a problem with my hostel room fan.")}
         currentUser={currentUser}
         onOpenLogin={handleOpenLoginView}
@@ -179,12 +169,12 @@ export default function App() {
       <main>
         {activeView === 'landing' && (
           <LandingPage
-            onGetStarted={() => setActiveView('chat')}
+            onGetStarted={() => handleViewChange('chat')}
             onTryQuery={(preset) => handleOpenQueryModal(preset)}
             onOpenLogin={() => handleOpenLoginView('login')}
             onSelectTicket={(ticket) => {
               setSelectedTicket(ticket);
-              setActiveView('tracking');
+              handleViewChange('tracking');
             }}
           />
         )}
@@ -195,7 +185,7 @@ export default function App() {
             onCreateTicket={handleCreateTicket}
             onSelectTicket={(ticket) => {
               setSelectedTicket(ticket);
-              setActiveView('tracking');
+              handleViewChange('tracking');
             }}
             currentUser={currentUser}
           />
@@ -205,10 +195,10 @@ export default function App() {
           <StudentDashboard
             queries={queries}
             onOpenNewQuery={() => handleOpenQueryModal("I have a problem with my hostel room fan.")}
-            onOpenChat={() => setActiveView('chat')}
+            onOpenChat={() => handleViewChange('chat')}
             onSelectTicket={(ticket) => {
               setSelectedTicket(ticket);
-              setActiveView('tracking');
+              handleViewChange('tracking');
             }}
           />
         )}
@@ -216,7 +206,7 @@ export default function App() {
         {activeView === 'tracking' && (
           <QueryTracker
             ticket={selectedTicket || queries[0]}
-            onBack={() => setActiveView('student')}
+            onBack={() => handleViewChange('student')}
             onUpdateTicketStatus={handleUpdateTicketStatus}
             onAddReply={handleAddReply}
           />
@@ -228,7 +218,7 @@ export default function App() {
             onUpdateTicketStatus={handleUpdateTicketStatus}
             onSelectTicket={(ticket) => {
               setSelectedTicket(ticket);
-              setActiveView('tracking');
+              handleViewChange('tracking');
             }}
           />
         )}
@@ -237,7 +227,7 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <BottomNav
         activeView={activeView}
-        setActiveView={setActiveView}
+        setActiveView={handleViewChange}
       />
 
       {/* Smart Query Creation Modal */}
@@ -246,10 +236,59 @@ export default function App() {
         onClose={() => setIsQueryModalOpen(false)}
         onSubmitQuery={(ticket) => {
           handleCreateTicket(ticket);
-          setActiveView('tracking');
+          handleViewChange('tracking');
         }}
         defaultText={modalDefaultText}
       />
+
+      {/* Role-Based Authorization Guard Modal */}
+      {unauthorizedNotice && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121B2D] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-scaleIn">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold text-white tracking-tight">
+                {unauthorizedNotice.title}
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {unauthorizedNotice.message}
+              </p>
+            </div>
+
+            <div className="p-3 bg-[#0E1626] border border-slate-800 rounded-xl text-xs space-y-1 text-slate-300">
+              <div className="font-semibold text-slate-200 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-blue-400" />
+                <span>Authorization Role Matrix:</span>
+              </div>
+              <div className="text-[11px] text-slate-400">
+                • Current Account: <span className="font-bold text-amber-400 uppercase">{currentUser?.role || 'Guest'}</span><br />
+                • Required Role: <span className="font-bold text-blue-400">Staff / Warden / SuperAdmin</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={() => {
+                  setUnauthorizedNotice(null);
+                  handleOpenLoginView('login');
+                }}
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-500/20 transition-colors"
+              >
+                Sign In as Staff / Warden
+              </button>
+              <button
+                onClick={() => setUnauthorizedNotice(null)}
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
+              >
+                Continue as Student
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
