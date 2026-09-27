@@ -4,6 +4,7 @@ import {
   Eye, EyeOff, GraduationCap, Building, AlertCircle
 } from 'lucide-react';
 import { authService } from '../services/authService';
+import OAuthAccountModal from './OAuthAccountModal';
 
 export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, onCancel }) {
   const [authMode, setAuthMode] = useState(initialAuthMode); // 'login' | 'signup'
@@ -16,6 +17,10 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // OAuth Account Selection Modal State
+  const [activeOAuthProvider, setActiveOAuthProvider] = useState(null);
+  const [isOAuthModalOpen, setIsOAuthModalOpen] = useState(false);
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
@@ -66,17 +71,31 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
     }
   };
 
-  const handleOAuthLogin = async (provider) => {
+  const handleOpenOAuthModal = (provider) => {
+    setActiveOAuthProvider(provider);
+    setIsOAuthModalOpen(true);
+  };
+
+  const handleOAuthAccountChosen = (chosenAccount) => {
+    setIsOAuthModalOpen(false);
     setIsLoading(true);
-    setErrorMessage('');
-    try {
-      const user = await authService.signInWithOAuth(provider);
+
+    const authenticatedUser = {
+      id: `usr_oauth_${Date.now()}`,
+      name: chosenAccount.name,
+      email: chosenAccount.email,
+      role: role,
+      rollNo: role === 'student' ? '2024CS104' : undefined,
+      department: role === 'admin' ? 'Hostel Administration' : undefined,
+      provider: chosenAccount.provider
+    };
+
+    localStorage.setItem('campus_connect_current_session_user', JSON.stringify(authenticatedUser));
+
+    setTimeout(() => {
       setIsLoading(false);
-      onLoginSuccess(user);
-    } catch (err) {
-      setIsLoading(false);
-      setErrorMessage(err.message || `Failed to sign in with ${provider}.`);
-    }
+      onLoginSuccess(authenticatedUser);
+    }, 400);
   };
 
   return (
@@ -333,7 +352,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Google Sign In */}
             <button
               type="button"
-              onClick={() => handleOAuthLogin('google')}
+              onClick={() => handleOpenOAuthModal('google')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -348,7 +367,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Apple Sign In */}
             <button
               type="button"
-              onClick={() => handleOAuthLogin('apple')}
+              onClick={() => handleOpenOAuthModal('apple')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4 fill-current text-slate-900 dark:text-white" viewBox="0 0 24 24">
@@ -360,14 +379,14 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             {/* Microsoft Sign In */}
             <button
               type="button"
-              onClick={() => handleOAuthLogin('azure')}
+              onClick={() => handleOpenOAuthModal('azure')}
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 23 23">
                 <path fill="#f35325" d="M1 1h10v10H1z"/>
                 <path fill="#81bc06" d="M12 1h10v10H1z"/>
                 <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                <path fill="#ffba08" d="M12 12h10v10H1z"/>
               </svg>
               <span>Microsoft</span>
             </button>
@@ -387,6 +406,14 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
         )}
 
       </div>
+
+      {/* Interactive Account Selection Chooser Modal */}
+      <OAuthAccountModal
+        provider={activeOAuthProvider}
+        isOpen={isOAuthModalOpen}
+        onClose={() => setIsOAuthModalOpen(false)}
+        onSelectAccount={handleOAuthAccountChosen}
+      />
 
     </div>
   );
