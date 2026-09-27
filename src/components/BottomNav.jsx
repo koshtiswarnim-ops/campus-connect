@@ -1,5 +1,4 @@
-import React from 'react';
-import { Home, MessageSquare, FileText, Bell, ShieldCheck } from 'lucide-react';
+import { Home, MessageSquare, FileText, ShieldCheck, User } from 'lucide-react';
 
 export default function BottomNav({ activeView, setActiveView }) {
   return (
@@ -34,7 +33,7 @@ export default function BottomNav({ activeView, setActiveView }) {
           }`}
         >
           <FileText className="w-5 h-5" />
-          <span className="text-[10px]">My Requests</span>
+          <span className="text-[10px]">Requests</span>
         </button>
 
         <button
@@ -45,6 +44,16 @@ export default function BottomNav({ activeView, setActiveView }) {
         >
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[10px]">Staff Desk</span>
+        </button>
+
+        <button
+          onClick={() => setActiveView('profile')}
+          className={`flex flex-col items-center gap-1 transition-colors ${
+            activeView === 'profile' ? 'text-blue-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[10px]">Profile</span>
         </button>
 
       </div>

@@ -8,6 +8,7 @@ import AdminDashboard from './components/AdminDashboard';
 import SmartQueryModal from './components/SmartQueryModal';
 import LoginPage from './components/LoginPage';
 import BottomNav from './components/BottomNav';
+import UserProfile from './components/UserProfile';
 import { INITIAL_QUERIES } from './data/mockData';
 import { authService } from './services/authService';
 import { isRealSupabaseConfigured } from './services/supabaseClient';
@@ -220,6 +221,19 @@ export default function App() {
               setSelectedTicket(ticket);
               handleViewChange('tracking');
             }}
+          />
+        )}
+
+        {activeView === 'profile' && (
+          <UserProfile
+            currentUser={currentUser}
+            queries={queries}
+            onUpdateUser={(updatedUser) => {
+              setCurrentUser(updatedUser);
+              localStorage.setItem('campus_connect_current_session_user', JSON.stringify(updatedUser));
+            }}
+            onLogout={handleLogout}
+            onBack={() => handleViewChange('student')}
           />
         )}
       </main>
