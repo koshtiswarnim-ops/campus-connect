@@ -8,7 +8,6 @@ import AdminDashboard from './components/AdminDashboard';
 import SmartQueryModal from './components/SmartQueryModal';
 import LoginPage from './components/LoginPage';
 import BottomNav from './components/BottomNav';
-import HackathonDemoBar from './components/HackathonDemoBar';
 import { INITIAL_QUERIES } from './data/mockData';
 
 export default function App() {
