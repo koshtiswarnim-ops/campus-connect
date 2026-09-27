@@ -194,6 +194,38 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
             </form>
           </div>
 
+          {/* Interactive Feedback & Rating System (Shown when Resolved) */}
+          {ticket.status === 'Resolved' && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 space-y-3 shadow-md animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-extrabold text-emerald-400 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <span>Rate Resolution & Service Feedback</span>
+                </h4>
+                <span className="text-[11px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-semibold">
+                  Query Completed
+                </span>
+              </div>
+              <p className="text-xs text-slate-300">
+                How satisfied are you with the routing speed and resolution provided by {ticket.department}?
+              </p>
+              
+              <div className="flex items-center gap-2 pt-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => {
+                      alert(`Thank you for rating ${star} Stars! Your feedback has been submitted to ${ticket.department} Admin.`);
+                    }}
+                    className="p-2 rounded-xl bg-[#121B2D] border border-slate-700 hover:border-amber-400 hover:bg-amber-400/10 text-amber-400 transition-all text-sm font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    ★ {star}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Column: Routing Metadata */}
