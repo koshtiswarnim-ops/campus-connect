@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Sparkles, ArrowRight, ShieldCheck, Bus, Building, Wallet, 
   GraduationCap, Stethoscope, Laptop, CheckCircle2, MessageSquare, 
-  Zap, Clock, FileText, ChevronRight, User, Play, HelpCircle
+  Zap, Clock, FileText, ChevronRight, User, Play, HelpCircle, Lock, EyeOff
 } from 'lucide-react';
 import HeroDemoCard from './HeroDemoCard';
 
@@ -23,6 +23,14 @@ export default function LandingPage({
       badgeColor: 'bg-slate-100 border border-slate-200 text-slate-900'
     },
     {
+      id: 'anonymous-requests',
+      title: '100% Anonymous & Sensitive Submissions',
+      category: 'Student Privacy & Safety',
+      desc: 'Students can submit sensitive queries (hostel issues, ragging, fee extensions) with 100% encrypted identity protection from staff views.',
+      icon: Lock,
+      badgeColor: 'bg-slate-900 text-white'
+    },
+    {
       id: 'staff-desks',
       title: 'Dedicated Staff & Warden Dashboards',
       category: 'Multi-Department Control',
@@ -34,17 +42,9 @@ export default function LandingPage({
       id: 'bus-tracking',
       title: 'Live Bus GPS Telemetry System',
       category: 'Campus Mobility',
-      desc: 'Real-time Google Maps campus shuttle tracking, animated route progress, driver rosters, and stop arrival SMS alerts.',
+      desc: 'Real-time Google Maps campus shuttle tracking (G1 to G100), animated route progress, driver rosters, and stop arrival alerts.',
       icon: Bus,
       badgeColor: 'bg-amber-50 border border-amber-200 text-amber-800'
-    },
-    {
-      id: 'tracking-sla',
-      title: '4-Stage Resolution & Rating',
-      category: 'Transparency',
-      desc: 'Students track query status from Submitted ➔ Assigned ➔ In Progress ➔ Resolved, with a 5-star rating feedback loop.',
-      icon: Clock,
-      badgeColor: 'bg-emerald-50 border border-emerald-200 text-emerald-800'
     }
   ];
 
@@ -76,6 +76,12 @@ export default function LandingPage({
           <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
             Campus Connect uses natural language AI to instantly classify, prioritize, and route student queries directly to the responsible college wardens and staff.
           </p>
+
+          {/* Anonymous Feature Pill Highlight */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 text-white text-xs font-bold shadow-sm">
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span>Submit queries 100% Anonymously anytime with encrypted privacy protection</span>
+          </div>
 
           {/* Hero CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
@@ -248,7 +254,7 @@ export default function LandingPage({
             Built for Modern Higher Education
           </h2>
           <p className="text-slate-600 text-sm max-w-xl mx-auto font-medium">
-            Everything students and administrators need for seamless query resolution.
+            Everything students and administrators need for seamless query resolution with 100% privacy support.
           </p>
         </div>
 

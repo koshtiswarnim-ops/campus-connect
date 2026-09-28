@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, Sparkles, User, Building, Clock, CheckCircle, 
-  ArrowRight, ShieldCheck, RefreshCw, Trash2, CheckCircle2, AlertCircle, FileText
+  ArrowRight, ShieldCheck, RefreshCw, Trash2, CheckCircle2, AlertCircle, FileText, Lock, EyeOff
 } from 'lucide-react';
 import { classifyQuery } from '../utils/aiClassifier';
 
@@ -86,7 +86,7 @@ export default function StudentChat({
             { 
               status: "Submitted", 
               time: "Just Now", 
-              note: `Request raised by ${isAnonymous ? 'Anonymous Student' : (currentUser?.name || 'Rahul Sharma')}. Smart Intent: ${classification.intent}` 
+              note: `Request raised ${isAnonymous ? 'ANONYMOUSLY (Identity Hidden)' : 'by ' + (currentUser?.name || 'Rahul Sharma')}. Smart Intent: ${classification.intent}` 
             },
             { 
               status: "Assigned", 
@@ -97,7 +97,7 @@ export default function StudentChat({
           replies: [
             {
               sender: "System AI",
-              text: `Query intent recognized as ${classification.intent}. Smart-routed to ${classification.department}. SLA: ${classification.suggestedSLA}.`,
+              text: `Query intent recognized as ${classification.intent}.${isAnonymous ? ' Submitted anonymously. Student identity encrypted.' : ''} Smart-routed to ${classification.department}. SLA: ${classification.suggestedSLA}.`,
               time: "Just Now"
             }
           ]
@@ -108,7 +108,7 @@ export default function StudentChat({
         const aiResponseMsg = {
           id: `msg-ai-${Date.now()}`,
           sender: "ai",
-          text: `I have analyzed your problem and created a trackable ticket for ${classification.department}.`,
+          text: `I have analyzed your problem and created a trackable ticket for ${classification.department}.${isAnonymous ? ' (Submitted Anonymously)' : ''}`,
           classification: classification,
           ticket: newTicket,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -152,6 +152,19 @@ export default function StudentChat({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Quick Anonymous Mode Toggle Button */}
+          <button
+            onClick={() => setIsAnonymous(!isAnonymous)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              isAnonymous
+                ? 'bg-black text-white border-black shadow-sm'
+                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+            }`}
+          >
+            <Lock className={`w-3.5 h-3.5 ${isAnonymous ? 'text-amber-400' : 'text-gray-500'}`} />
+            <span>{isAnonymous ? 'Anonymous: ON' : 'Anonymous Mode'}</span>
+          </button>
+
           <button
             onClick={clearChat}
             className="p-2 rounded-xl text-gray-500 hover:text-black hover:bg-gray-100 transition-colors text-xs flex items-center gap-1 font-medium cursor-pointer"
@@ -177,7 +190,7 @@ export default function StudentChat({
                 ? 'bg-black text-white'
                 : 'bg-gray-200 border border-gray-300 text-gray-800'
             }`}>
-              {msg.sender === 'user' ? (msg.isAnonymous ? 'A' : 'R') : <Sparkles className="w-4 h-4 text-black" />}
+              {msg.sender === 'user' ? (msg.isAnonymous ? '🔒' : 'R') : <Sparkles className="w-4 h-4 text-black" />}
             </div>
 
             {/* Bubble */}
@@ -190,7 +203,7 @@ export default function StudentChat({
               }`}>
                 <p>{msg.text}</p>
                 <div className={`text-[10px] mt-1.5 font-medium ${msg.sender === 'user' ? 'text-gray-300 text-right' : 'text-gray-400'}`}>
-                  {msg.time} {msg.isAnonymous && '• Anonymous'}
+                  {msg.time} {msg.isAnonymous && '• 🔒 Submitted Anonymously'}
                 </div>
               </div>
 
@@ -224,8 +237,11 @@ export default function StudentChat({
                     </div>
 
                     <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase">Priority</div>
-                      <div className="font-semibold text-amber-600 truncate mt-0.5">{msg.classification.priority}</div>
+                      <div className="text-[10px] text-gray-500 font-bold uppercase">Mode</div>
+                      <div className="font-semibold text-amber-600 truncate mt-0.5 flex items-center gap-1">
+                        {isAnonymous ? <Lock className="w-3 h-3 text-amber-600" /> : null}
+                        <span>{isAnonymous ? 'Anonymous' : 'Public'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -233,8 +249,11 @@ export default function StudentChat({
                   {msg.ticket && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-mono font-bold text-black">
-                          Ticket ID: {msg.ticket.id}
+                        <div className="text-xs font-mono font-bold text-black flex items-center gap-1.5">
+                          <span>Ticket ID: {msg.ticket.id}</span>
+                          {msg.ticket.isAnonymous && (
+                            <span className="bg-black text-white text-[9px] px-1.5 py-0.2 rounded font-mono">ANONYMOUS</span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-600 mt-0.5 font-medium">
                           Status: <span className="text-emerald-600 font-bold">{msg.ticket.status}</span> · Assigned to {msg.ticket.assignedTo}
@@ -305,7 +324,7 @@ export default function StudentChat({
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
-            placeholder="Type your campus problem (e.g. There is a water problem in my hostel)..."
+            placeholder={isAnonymous ? "Type your anonymous problem (Identity will be hidden)..." : "Type your campus problem (e.g. There is a water problem in my hostel)..."}
             className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-black placeholder-gray-400 font-medium"
           />
 
@@ -314,7 +333,7 @@ export default function StudentChat({
             disabled={!inputQuery.trim()}
             className="px-5 py-3 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold text-sm transition-all shadow-md flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
           >
-            <span>Send</span>
+            <span>{isAnonymous ? 'Send Anonymously' : 'Send'}</span>
             <Send className="w-4 h-4" />
           </button>
         </form>
@@ -328,7 +347,9 @@ export default function StudentChat({
               onChange={(e) => setIsAnonymous(e.target.checked)}
               className="w-3.5 h-3.5 rounded border-gray-300 bg-white text-black focus:ring-black"
             />
-            <span className="text-gray-900 font-semibold">Submit anonymously</span> (Restricted identity visibility)
+            <span className="text-gray-900 font-semibold flex items-center gap-1">
+              <Lock className="w-3 h-3 text-black" /> Submit anonymously
+            </span> (Hide student identity from wardens & staff)
           </label>
 
           <span className="text-[11px] text-gray-400">

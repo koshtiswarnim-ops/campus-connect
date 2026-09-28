@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Plus, Search, Building, Wifi, FileText, CreditCard, 
   GraduationCap, BookOpen, Bus, Briefcase, HeartHandshake,
-  Clock, CheckCircle, AlertCircle, ArrowRight, Bell, Sparkles
+  Clock, CheckCircle, AlertCircle, ArrowRight, Bell, Sparkles, Shield, EyeOff, Lock
 } from 'lucide-react';
 import { CAMPUS_SERVICES } from '../data/mockData';
 
@@ -18,17 +18,20 @@ export default function StudentDashboard({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [anonymousFilter, setAnonymousFilter] = useState(false);
 
   const filteredQueries = queries.filter(q => {
     const matchesSearch = q.studentSays.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           q.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           q.department.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || q.category.toLowerCase().includes(selectedCategory.toLowerCase());
-    return matchesSearch && matchesCategory;
+    const matchesAnonymous = !anonymousFilter || q.isAnonymous;
+    return matchesSearch && matchesCategory && matchesAnonymous;
   });
 
   const activeCount = queries.filter(q => q.status !== 'Resolved').length;
   const resolvedCount = queries.filter(q => q.status === 'Resolved').length;
+  const anonymousCount = queries.filter(q => q.isAnonymous).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-white text-gray-900 min-h-screen">
@@ -36,15 +39,21 @@ export default function StudentDashboard({
       {/* Welcome & Stats Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
         <div className="space-y-2 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs text-gray-800 font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Student Service Portal</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs text-gray-800 font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>Student Service Portal</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold">
+              <Lock className="w-3 h-3 text-amber-400" />
+              <span>Anonymous Submissions Enabled</span>
+            </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-black">
             How can we help you today?
           </h1>
           <p className="text-gray-600 text-sm max-w-xl">
-            Describe your problem in plain language — Campus Connect understands intent, routes to the right department, and tracks your resolution.
+            Describe your problem in plain language — Campus Connect routes to the right department. You can also submit queries <strong>100% anonymously</strong> to protect your identity.
           </p>
         </div>
 
@@ -59,31 +68,57 @@ export default function StudentDashboard({
             <div className="text-[10px] text-gray-500 font-semibold uppercase">Resolved</div>
           </div>
 
-          <button
-            onClick={onOpenChat}
-            className="px-5 py-3.5 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold text-sm transition-all shadow-md flex items-center gap-2 active:scale-95 cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span>Open AI Chat Assistant</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => onOpenNewQuery("Water problem in hostel room - Anonymous Request")}
+              className="px-4 py-3.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 font-semibold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              title="Submit a query without revealing your identity"
+            >
+              <EyeOff className="w-4 h-4 text-black" />
+              <span>Submit Anonymously</span>
+            </button>
+
+            <button
+              onClick={onOpenChat}
+              className="px-5 py-3.5 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold text-sm transition-all shadow-md flex items-center gap-2 active:scale-95 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Open AI Chat</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Query Search Bar */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-        <Search className="w-5 h-5 text-gray-400 ml-2" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search your queries by keyword, ID (e.g. CC-2026-10482), or department..."
-          className="flex-1 bg-transparent text-gray-900 text-base focus:outline-none placeholder-gray-400 font-medium"
-        />
-        {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="text-xs text-gray-500 hover:text-black px-2">
-            Clear
-          </button>
-        )}
+      {/* Query Search & Filter Toolbar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs flex items-center gap-3 flex-1 w-full">
+          <Search className="w-5 h-5 text-gray-400 ml-2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search your queries by keyword, ID (e.g. CC-2026-10482), or department..."
+            className="flex-1 bg-transparent text-gray-900 text-base focus:outline-none placeholder-gray-400 font-medium"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="text-xs text-gray-500 hover:text-black px-2">
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Anonymous Filter Toggle */}
+        <button
+          onClick={() => setAnonymousFilter(!anonymousFilter)}
+          className={`px-4 py-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+            anonymousFilter
+              ? 'bg-black text-white border-black shadow-md'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+          }`}
+        >
+          <Lock className={`w-3.5 h-3.5 ${anonymousFilter ? 'text-amber-400' : 'text-gray-500'}`} />
+          <span>Anonymous Requests Only ({anonymousCount})</span>
+        </button>
       </div>
 
       {/* Quick Issue Categories Grid */}
@@ -155,10 +190,19 @@ export default function StudentDashboard({
                 className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-black shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-xs font-bold text-black bg-gray-100 px-2.5 py-0.5 rounded border border-gray-200">
                       {ticket.id}
                     </span>
+
+                    {/* Anonymous Request Indicator Badge */}
+                    {ticket.isAnonymous && (
+                      <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-300">
+                        <Lock className="w-3 h-3 text-black" />
+                        <span>Anonymous Request</span>
+                      </span>
+                    )}
+
                     <span className="text-xs text-gray-500 font-medium">{ticket.department}</span>
                     <span className="text-gray-300">•</span>
                     <span className="text-xs text-gray-500">{ticket.category}</span>

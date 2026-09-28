@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Building, Wallet, GraduationCap, Stethoscope, Laptop, Bus, 
   ShieldCheck, CheckCircle2, Clock, AlertTriangle, Filter, 
-  Search, MessageSquare, ChevronRight, User, RefreshCw, FileText
+  Search, MessageSquare, ChevronRight, User, RefreshCw, FileText, Lock, EyeOff
 } from 'lucide-react';
 
 export default function AdminDashboard({ 
@@ -18,6 +18,7 @@ export default function AdminDashboard({
   );
   
   const [statusFilter, setStatusFilter] = useState('All');
+  const [showAnonymousOnly, setShowAnonymousOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Department metadata definition
@@ -68,22 +69,24 @@ export default function AdminDashboard({
 
   const currentDeptMeta = staffDepartments.find(d => d.id === activeStaffDept) || staffDepartments[0];
 
-  // Filter queries based on active staff department tab & status/search
+  // Filter queries based on active staff department tab & status/search/anonymous
   const departmentQueries = queries.filter(q => {
     const matchesDept = q.department?.toLowerCase().includes(activeStaffDept.toLowerCase()) || 
                         activeStaffDept === 'All';
     const matchesStatus = statusFilter === 'All' || q.status === statusFilter;
+    const matchesAnon = !showAnonymousOnly || q.isAnonymous;
     const matchesSearch = !searchTerm || 
       q.studentSays?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.studentName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesDept && matchesStatus && matchesSearch;
+    return matchesDept && matchesStatus && matchesAnon && matchesSearch;
   });
 
   const totalDeptCount = departmentQueries.length;
   const pendingCount = departmentQueries.filter(q => q.status !== 'Resolved').length;
   const resolvedCount = departmentQueries.filter(q => q.status === 'Resolved').length;
+  const anonymousCount = queries.filter(q => q.isAnonymous).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 bg-white text-gray-900 min-h-screen">
@@ -179,21 +182,22 @@ export default function AdminDashboard({
 
           <div>
             <span className="text-xs uppercase font-mono tracking-wider text-gray-500 block mb-1">
-              Resolved SLA Rate
+              Anonymous Submissions
             </span>
-            <div className="text-2xl font-extrabold text-emerald-600">
-              {totalDeptCount > 0 ? Math.round((resolvedCount / totalDeptCount) * 100) : 100}%
+            <div className="text-2xl font-extrabold text-black flex items-center gap-1">
+              <Lock className="w-5 h-5 text-amber-600" />
+              <span>{anonymousCount} Protected</span>
             </div>
             <span className="text-xs text-gray-500 mt-1 block">
-              {resolvedCount} Total Resolved
+              Identity encrypted for privacy
             </span>
           </div>
         </div>
       </div>
 
       {/* Filters & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-gray-200 p-4 rounded-2xl shadow-xs">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-gray-200 p-4 rounded-2xl shadow-xs">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <Filter className="w-4 h-4 text-gray-500" />
           <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Filter Status:</span>
           {['All', 'Submitted', 'Assigned', 'In Progress', 'Resolved'].map(status => (
@@ -209,10 +213,23 @@ export default function AdminDashboard({
               {status}
             </button>
           ))}
+
+          {/* Anonymous Only Staff Filter */}
+          <button
+            onClick={() => setShowAnonymousOnly(!showAnonymousOnly)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+              showAnonymousOnly
+                ? 'bg-slate-900 text-white border-black shadow-sm'
+                : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span>Anonymous Only</span>
+          </button>
         </div>
 
         {/* Search Bar */}
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full lg:w-64">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -244,8 +261,17 @@ export default function AdminDashboard({
                 departmentQueries.map(t => (
                   <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-bold text-black">{t.id}</div>
-                      <div className="text-[11px] text-gray-500">{t.studentName}</div>
+                      <div className="font-bold text-black flex items-center gap-1.5">
+                        <span>{t.id}</span>
+                        {t.isAnonymous && (
+                          <span className="bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                            <Lock className="w-3 h-3 text-amber-400" /> Anonymous
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-gray-500 font-medium mt-0.5">
+                        {t.isAnonymous ? '🔒 Student Identity Restricted' : t.studentName}
+                      </div>
                     </td>
 
                     <td className="px-6 py-4 max-w-xs">

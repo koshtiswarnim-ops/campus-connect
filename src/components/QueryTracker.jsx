@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ArrowLeft, CheckCircle, Clock, Building, User, Send, 
-  Sparkles, ShieldCheck, AlertCircle, FileText, ChevronRight 
+  Sparkles, ShieldCheck, AlertCircle, FileText, ChevronRight, Lock, EyeOff
 } from 'lucide-react';
 
 export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onAddReply }) {
@@ -22,7 +22,7 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
     e.preventDefault();
     if (!replyText.trim()) return;
     onAddReply(ticket.id, {
-      sender: "Rahul Sharma (Student)",
+      sender: ticket.isAnonymous ? "Anonymous Student" : "Rahul Sharma (Student)",
       text: replyText,
       time: "Just Now"
     });
@@ -39,15 +39,39 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-black transition-colors font-semibold"
+          className="inline-flex items-center gap-2 text-sm text-gray-700 hover:text-black transition-colors font-semibold cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Queries</span>
         </button>
-        <span className="text-xs font-mono px-3 py-1 bg-gray-100 text-black border border-gray-200 rounded-full font-bold">
-          ID: {ticket.id}
-        </span>
+        <div className="flex items-center gap-2">
+          {ticket.isAnonymous && (
+            <span className="text-xs px-3 py-1 bg-slate-900 text-white border border-black rounded-full font-bold flex items-center gap-1">
+              <Lock className="w-3 h-3 text-amber-400" /> Anonymous Request
+            </span>
+          )}
+          <span className="text-xs font-mono px-3 py-1 bg-gray-100 text-black border border-gray-200 rounded-full font-bold">
+            ID: {ticket.id}
+          </span>
+        </div>
       </div>
+
+      {/* Anonymous Identity Notice Banner */}
+      {ticket.isAnonymous && (
+        <div className="p-4 rounded-2xl bg-slate-900 text-white border border-black flex items-center gap-3 shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-gray-800 text-amber-400 flex items-center justify-center shrink-0">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <span>🔒 Anonymous Request & Identity Protection Active</span>
+            </h4>
+            <p className="text-xs text-gray-300 mt-0.5">
+              Your personal identity (Name, Student Roll No, Email) is encrypted and hidden from wardens and staff views. Staff can only see the issue details to resolve it.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Ticket Banner */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs transition-colors">
@@ -162,7 +186,7 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
                 <div 
                   key={i} 
                   className={`p-3.5 rounded-xl border ${
-                    reply.sender.includes("Student")
+                    reply.sender.includes("Student") || reply.sender.includes("Anonymous")
                       ? 'bg-black text-white border-black ml-6 text-right'
                       : 'bg-gray-50 border-gray-200 text-gray-900 mr-6'
                   }`}
@@ -238,6 +262,13 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
 
             <div className="space-y-3 text-sm">
               <div>
+                <span className="text-xs text-gray-500 block">Student Identity</span>
+                <span className="font-semibold text-black">
+                  {ticket.isAnonymous ? '🔒 Anonymous Student (Protected)' : (ticket.studentName || 'Rahul Sharma')}
+                </span>
+              </div>
+
+              <div>
                 <span className="text-xs text-gray-500 block">Category</span>
                 <span className="font-semibold text-black">{ticket.category}</span>
               </div>
@@ -274,13 +305,13 @@ export default function QueryTracker({ ticket, onBack, onUpdateTicketStatus, onA
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => onUpdateTicketStatus(ticket.id, 'In Progress')}
-                className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100"
+                className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 cursor-pointer"
               >
                 Mark In Progress
               </button>
               <button
                 onClick={() => onUpdateTicketStatus(ticket.id, 'Resolved')}
-                className="px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100"
+                className="px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 cursor-pointer"
               >
                 Mark Resolved
               </button>
