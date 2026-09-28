@@ -1,14 +1,30 @@
 @import "tailwindcss";
 
+@layer base {
+  :root {
+    --bg-main: #0B111E;
+    --bg-surface: #121B2D;
+    --bg-subtle: #0E1626;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #FFFFFF;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --accent-blue: #3B82F6;
+    --accent-blue-hover: #2563EB;
+    --nav-bg: rgba(11, 17, 30, 0.85);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+
 body {
-  background-color: #ffffff;
-  color: #111827;
-  font-family: 'Inter', sans-serif;
+  background-color: #0B111E;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Custom CSS animations specified in prompt */
+/* Custom Animation Keyframes */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -52,16 +68,16 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
-  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
+  background: rgba(148, 163, 184, 0.4);
 }
