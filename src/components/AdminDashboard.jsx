@@ -1,243 +1,317 @@
 import React, { useState } from 'react';
 import { 
-  Building, Filter, CheckCircle, Clock, AlertTriangle, 
-  UserCheck, Shield, ChevronRight, BarChart3, PieChart, RefreshCw
+  Building, Wallet, GraduationCap, Stethoscope, Laptop, Bus, 
+  ShieldCheck, CheckCircle2, Clock, AlertTriangle, Filter, 
+  Search, MessageSquare, ChevronRight, User, RefreshCw, FileText
 } from 'lucide-react';
-import { DEPARTMENTS } from '../data/mockData';
 
-export default function AdminDashboard({ queries, onUpdateTicketStatus, onSelectTicket }) {
-  const [selectedDept, setSelectedDept] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
-  const [selectedPriority, setSelectedPriority] = useState('All');
+export default function AdminDashboard({ 
+  queries = [], 
+  onUpdateTicketStatus, 
+  onSelectTicket,
+  currentUser,
+  onOpenBusTracker
+}) {
+  // Staff Role / Department Active Filter tab
+  const [activeStaffDept, setActiveStaffDept] = useState(
+    currentUser?.department || 'Hostel Administration'
+  );
+  
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const filtered = queries.filter(q => {
-    const matchDept = selectedDept === 'All' || q.department.toLowerCase().includes(selectedDept.toLowerCase());
-    const matchStatus = selectedStatus === 'All' || q.status === selectedStatus;
-    const matchPriority = selectedPriority === 'All' || q.priority === selectedPriority;
-    return matchDept && matchStatus && matchPriority;
+  // Department metadata definition
+  const staffDepartments = [
+    { 
+      id: 'Hostel Administration', 
+      label: 'Hostel Warden & Manager Desk', 
+      icon: Building, 
+      color: 'bg-blue-500', 
+      metrics: { primary: '94% Occupancy', secondary: '4 Maintenance Alerts', badge: 'Warden Portal' }
+    },
+    { 
+      id: 'Accounts & Finance', 
+      label: 'Fee Counter & Finance Desk', 
+      icon: Wallet, 
+      color: 'bg-emerald-500', 
+      metrics: { primary: '$1.4M Collected', secondary: '14 Pending Refunds', badge: 'Finance Portal' }
+    },
+    { 
+      id: 'Academic Office', 
+      label: 'Academic & Exam Branch Desk', 
+      icon: GraduationCap, 
+      color: 'bg-purple-500', 
+      metrics: { primary: '4,200 Admit Cards', secondary: '32 Re-evaluations', badge: 'Exam Branch' }
+    },
+    { 
+      id: 'Health Center', 
+      label: 'Campus Health & Medical Desk', 
+      icon: Stethoscope, 
+      color: 'bg-rose-500', 
+      metrics: { primary: '18 Appointments', secondary: 'Ambulance Ready', badge: 'Medical Center' }
+    },
+    { 
+      id: 'IT Support & ERP', 
+      label: 'Central IT & ERP Desk', 
+      icon: Laptop, 
+      color: 'bg-indigo-500', 
+      metrics: { primary: '99.98% Uptime', secondary: '42 Password Resets', badge: 'IT Control' }
+    },
+    { 
+      id: 'Bus Transport', 
+      label: 'Bus Fleet & Transport Admin', 
+      icon: Bus, 
+      color: 'bg-amber-500', 
+      metrics: { primary: '3 Buses Active', secondary: 'Live GPS Live', badge: 'GPS Telemetry' }
+    }
+  ];
+
+  const currentDeptMeta = staffDepartments.find(d => d.id === activeStaffDept) || staffDepartments[0];
+
+  // Filter queries based on active staff department tab & status/search
+  const departmentQueries = queries.filter(q => {
+    const matchesDept = q.department?.toLowerCase().includes(activeStaffDept.toLowerCase()) || 
+                        activeStaffDept === 'All';
+    const matchesStatus = statusFilter === 'All' || q.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      q.studentSays?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.studentName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesDept && matchesStatus && matchesSearch;
   });
 
-  const totalCount = queries.length;
-  const pendingCount = queries.filter(q => q.status === 'Submitted').length;
-  const inProgressCount = queries.filter(q => q.status === 'In Progress').length;
-  const resolvedCount = queries.filter(q => q.status === 'Resolved').length;
+  const totalDeptCount = departmentQueries.length;
+  const pendingCount = departmentQueries.filter(q => q.status !== 'Resolved').length;
+  const resolvedCount = departmentQueries.filter(q => q.status === 'Resolved').length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 bg-white text-gray-900 min-h-screen">
       
-      {/* Admin Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-            <Shield className="w-4 h-4" />
-            <span>Staff & Department Service Desk</span>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black">
+            <ShieldCheck className="w-4 h-4 text-black" />
+            <span>Multi-Department Staff Control Center</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            Campus Operations Control Center
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-black tracking-tight mt-1">
+            {currentDeptMeta.label}
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-            Real-time incoming campus tickets, automated routing verification, & SLA status tracking.
-          </p>
         </div>
 
-        {/* Quick Demo Department Switcher */}
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedDept}
-            onChange={(e) => setSelectedDept(e.target.value)}
-            className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-xs"
-          >
-            <option value="All">All Campus Departments</option>
-            {DEPARTMENTS.map(d => (
-              <option key={d.name} value={d.name}>{d.name}</option>
-            ))}
-          </select>
+        {/* Quick Switch to Bus GPS Tracker */}
+        <button
+          onClick={onOpenBusTracker}
+          className="bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+        >
+          <Bus className="w-4 h-4 text-amber-400" />
+          <span>Launch Bus GPS Live Map</span>
+        </button>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* STAFF DEPARTMENT SWITCHER TABS                                 */}
+      {/* ------------------------------------------------------------- */}
+      <div className="overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center gap-2 min-w-max">
+          {staffDepartments.map(dept => {
+            const Icon = dept.icon;
+            const isActive = activeStaffDept === dept.id;
+            return (
+              <button
+                key={dept.id}
+                onClick={() => setActiveStaffDept(dept.id)}
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+                  isActive
+                    ? 'bg-black text-white border-black shadow-lg scale-102'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-black'
+                }`}
+              >
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-white ${dept.color}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span>{dept.id}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        
-        <div className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase">Total Tickets</span>
-            <Building className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{totalCount}</div>
-          <div className="text-xs text-slate-500 mt-1 font-medium">Across all departments</div>
-        </div>
+      {/* Specialized Department Metrics Banner */}
+      <div className="bg-gray-900 text-white rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl border border-gray-800">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase">Pending Routing</span>
-            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{pendingCount}</div>
-          <div className="text-xs text-slate-500 mt-1 font-medium">Requires staff action</div>
-        </div>
-
-        <div className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase">In Progress</span>
-            <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{inProgressCount}</div>
-          <div className="text-xs text-slate-500 mt-1 font-medium">Under active repair/review</div>
-        </div>
-
-        <div className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase">Resolved Today</span>
-            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{resolvedCount}</div>
-          <div className="text-xs text-slate-500 mt-1 font-medium">Closed with student signoff</div>
-        </div>
-
-      </div>
-
-      {/* Analytics & Queue Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left: Main Ticket Queue Table (8 cols) */}
-        <div className="lg:col-span-8 bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-sm transition-colors">
-          
-          {/* Filters Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Filter className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              Incoming Query Queue ({filtered.length})
-            </h2>
-
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-slate-50 dark:bg-[#182338] border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Submitted">Submitted</option>
-                <option value="Assigned">Assigned</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-              </select>
-
-              <select
-                value={selectedPriority}
-                onChange={(e) => setSelectedPriority(e.target.value)}
-                className="bg-slate-50 dark:bg-[#182338] border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold"
-              >
-                <option value="All">All Priorities</option>
-                <option value="Normal">Normal</option>
-                <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
-              </select>
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-4 gap-6">
+          <div>
+            <span className="text-xs uppercase font-mono tracking-wider text-gray-400 block mb-1">
+              Active Channel
+            </span>
+            <div className="text-xl font-bold text-white flex items-center gap-2">
+              <span>{currentDeptMeta.id}</span>
             </div>
+            <span className="text-xs text-gray-400 mt-1 block">
+              SLA Priority Queue System
+            </span>
           </div>
 
-          {/* Ticket List Table */}
-          <div className="space-y-3">
-            {filtered.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">
-                No tickets match the selected filters.
-              </div>
-            ) : (
-              filtered.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="bg-slate-50 dark:bg-[#182338] border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-blue-500/50 transition-colors"
-                >
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{ticket.id}</span>
-                      <span className="text-slate-400">•</span>
-                      <span className="text-slate-800 dark:text-slate-300 font-semibold">{ticket.department}</span>
-                      <span className="text-slate-400">•</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        ticket.priority === 'Urgent' ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400' :
-                        ticket.priority === 'High' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400' :
-                        'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400'
-                      }`}>
-                        {ticket.priority}
-                      </span>
-                    </div>
+          <div>
+            <span className="text-xs uppercase font-mono tracking-wider text-gray-400 block mb-1">
+              Department Key Metric
+            </span>
+            <div className="text-2xl font-extrabold text-amber-400">
+              {currentDeptMeta.metrics.primary}
+            </div>
+            <span className="text-xs text-gray-400 mt-1 block">
+              {currentDeptMeta.metrics.secondary}
+            </span>
+          </div>
 
-                    <div className="text-sm font-bold text-slate-900 dark:text-white">
-                      "{ticket.studentSays}"
-                    </div>
+          <div>
+            <span className="text-xs uppercase font-mono tracking-wider text-gray-400 block mb-1">
+              Pending Tickets Queue
+            </span>
+            <div className="text-2xl font-extrabold text-blue-400">
+              {pendingCount} Pending
+            </div>
+            <span className="text-xs text-gray-400 mt-1 block">
+              Assigned to Warden & Staff
+            </span>
+          </div>
 
-                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      Assigned: <span className="text-slate-800 dark:text-slate-200 font-semibold">{ticket.assignedTo}</span>
-                    </div>
-                  </div>
+          <div>
+            <span className="text-xs uppercase font-mono tracking-wider text-gray-400 block mb-1">
+              Resolved SLA Rate
+            </span>
+            <div className="text-2xl font-extrabold text-emerald-400">
+              {totalDeptCount > 0 ? Math.round((resolvedCount / totalDeptCount) * 100) : 100}%
+            </div>
+            <span className="text-xs text-gray-400 mt-1 block">
+              {resolvedCount} Total Resolved
+            </span>
+          </div>
+        </div>
+      </div>
 
-                  {/* Actions Column */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onSelectTicket(ticket)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold cursor-pointer"
-                    >
-                      View Logs
-                    </button>
+      {/* Filters & Search Toolbar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50 border border-gray-200 p-4 rounded-2xl">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Filter Status:</span>
+          {['All', 'Submitted', 'Assigned', 'In Progress', 'Resolved'].map(status => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                statusFilter === status
+                  ? 'bg-black text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:text-black'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
 
-                    {ticket.status !== 'Resolved' ? (
-                      <button
-                        onClick={() => onUpdateTicketStatus(ticket.id, ticket.status === 'Submitted' ? 'In Progress' : 'Resolved')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-xs cursor-pointer ${
-                          ticket.status === 'Submitted' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-emerald-600 hover:bg-emerald-500'
-                        }`}
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search query or student..."
+            className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-black font-medium"
+          />
+        </div>
+      </div>
+
+      {/* Tickets Queue Table */}
+      <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider">
+              <tr>
+                <th className="px-6 py-4">Ticket ID & Student</th>
+                <th className="px-6 py-4">Query Details</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Priority SLA</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Warden Actions</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100 font-medium text-gray-800">
+              {departmentQueries.length > 0 ? (
+                departmentQueries.map(t => (
+                  <tr key={t.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-bold text-gray-900">{t.id}</div>
+                      <div className="text-[11px] text-gray-500">{t.studentName}</div>
+                    </td>
+
+                    <td className="px-6 py-4 max-w-xs">
+                      <div 
+                        onClick={() => onSelectTicket(t)}
+                        className="font-bold text-gray-900 hover:text-blue-600 line-clamp-1 cursor-pointer"
                       >
-                        {ticket.status === 'Submitted' ? 'Start Action' : 'Mark Resolved'}
-                      </button>
-                    ) : (
-                      <span className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 text-xs font-bold">
-                        Resolved
+                        "{t.studentSays}"
+                      </div>
+                      <div className="text-[10px] text-gray-500">
+                        Assigned: {t.assignedTo}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap font-semibold text-gray-700">
+                      {t.category}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                        t.priority === 'Urgent' ? 'bg-red-100 text-red-700 border border-red-200' :
+                        t.priority === 'High' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                        'bg-blue-50 text-blue-700 border border-blue-100'
+                      }`}>
+                        {t.priority}
                       </span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                    </td>
 
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                        t.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' :
+                        t.status === 'In Progress' ? 'bg-amber-100 text-amber-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {t.status}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-right space-x-1">
+                      <button
+                        onClick={() => onUpdateTicketStatus(t.id, 'In Progress')}
+                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold border border-amber-200 cursor-pointer"
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        onClick={() => onUpdateTicketStatus(t.id, 'Resolved')}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 cursor-pointer"
+                      >
+                        Resolve
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-medium">
+                    No active tickets found for <strong className="text-gray-900">{activeStaffDept}</strong> channel matching your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {/* Right: Department Health & Analytics Breakdown (4 cols) */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          <div className="bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm transition-colors">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              Department Workload Breakdown
-            </h3>
-
-            <div className="space-y-3">
-              {DEPARTMENTS.map((dept) => (
-                <div key={dept.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-800 dark:text-slate-300 font-semibold truncate max-w-[180px]">{dept.name}</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">{dept.activeTickets} tickets</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-600 rounded-full"
-                      style={{ width: `${Math.min(dept.activeTickets * 8, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-100 dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium transition-colors">
-            <div className="font-bold text-slate-900 dark:text-white text-sm">Automated SLA Guarantee</div>
-            <p>
-              Campus Connect auto-escalates unresolved Urgent hostel or IT tickets to Chief Warden / IT Director if SLA exceeds 24 hours.
-            </p>
-          </div>
-
-        </div>
-
       </div>
 
     </div>
