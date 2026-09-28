@@ -150,7 +150,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B111E] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] pb-16 md:pb-0 transition-colors duration-200">
+    <div className="min-h-screen bg-white text-gray-900 font-['Plus_Jakarta_Sans',sans-serif] pb-16 md:pb-0 transition-colors duration-200">
       
       {/* Navbar Header */}
       <Navbar
@@ -263,29 +263,29 @@ export default function App() {
 
       {/* Role-Based Authorization Guard Modal */}
       {unauthorizedNotice && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121B2D] border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-scaleIn text-white">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-scaleIn text-gray-900">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 mx-auto">
               <ShieldAlert className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-2">
-              <h2 className="text-xl font-bold text-white tracking-tight">
+              <h2 className="text-xl font-bold text-black tracking-tight">
                 {unauthorizedNotice.title}
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-gray-600 leading-relaxed font-medium">
                 {unauthorizedNotice.message}
               </p>
             </div>
 
-            <div className="p-3.5 bg-[#0E1626] border border-slate-800 rounded-2xl text-xs space-y-1 text-slate-300">
-              <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-blue-400" />
+            <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs space-y-1 text-gray-700">
+              <div className="font-semibold text-gray-900 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-black" />
                 <span>Authorization Role Matrix:</span>
               </div>
-              <div className="text-[11px] text-slate-400">
-                • Current Account: <span className="font-bold text-amber-400 uppercase">{currentUser?.role || 'Guest'}</span><br />
-                • Required Role: <span className="font-bold text-blue-400">Staff / Warden / SuperAdmin</span>
+              <div className="text-[11px] text-gray-600">
+                • Current Account: <span className="font-bold text-black uppercase">{currentUser?.role || 'Guest'}</span><br />
+                • Required Role: <span className="font-bold text-black">Staff / Warden / SuperAdmin</span>
               </div>
             </div>
 
@@ -295,13 +295,13 @@ export default function App() {
                   setUnauthorizedNotice(null);
                   handleOpenLoginView('login');
                 }}
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-500/20 transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold text-xs shadow-md transition-colors cursor-pointer"
               >
                 Sign In as Staff / Warden
               </button>
               <button
                 onClick={() => setUnauthorizedNotice(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-xs transition-colors cursor-pointer border border-gray-200"
               >
                 Continue as Student
               </button>

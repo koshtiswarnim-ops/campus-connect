@@ -99,17 +99,14 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B111E] text-slate-900 dark:text-slate-100 flex items-center justify-center p-4 relative overflow-hidden selection:bg-blue-500 selection:text-white transition-colors">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 relative overflow-hidden transition-colors">
       
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
       {/* Main Login Card Container */}
-      <div className="w-full max-w-md bg-white dark:bg-[#121B2D] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 space-y-5 backdrop-blur-md transition-colors">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative z-10 space-y-5 transition-colors">
         
         {/* Brand Logo & Title Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
+          <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center mx-auto shadow-md">
             <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 10a6 6 0 0 0-12 0c0 7 3 9 6 11 3-2 6-4 6-11Z" />
               <circle cx="12" cy="10" r="2.5" />
@@ -123,8 +120,8 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
               onClick={() => { setAuthMode('login'); setErrorMessage(''); }}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 authMode === 'login'
-                  ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-black text-white shadow-sm'
+                  : 'text-slate-600 hover:text-black hover:bg-slate-100'
               }`}
             >
               Sign In
@@ -134,18 +131,18 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
               onClick={() => { setAuthMode('signup'); setErrorMessage(''); }}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 authMode === 'signup'
-                  ? 'bg-blue-100 dark:bg-blue-600/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-black text-white shadow-sm'
+                  : 'text-slate-600 hover:text-black hover:bg-slate-100'
               }`}
             >
               Sign Up / Register
             </button>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight pt-1">
+          <h1 className="text-2xl font-extrabold text-black tracking-tight pt-1">
             {authMode === 'login' ? 'Sign in to Campus Connect' : 'Create Campus Account'}
           </h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+          <p className="text-xs text-slate-600 font-medium">
             {authMode === 'login'
               ? 'Unified student query routing & college administration portal'
               : 'Register your college student or staff identity for real query routing'}
@@ -154,21 +151,21 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
 
         {/* Error Banner */}
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-start gap-2 animate-shake">
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2 animate-shake">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Role Selection Tabs */}
-        <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800 rounded-xl">
+        <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 border border-slate-200 rounded-xl">
           <button
             type="button"
             onClick={() => handleRoleChange('student')}
             className={`py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               role === 'student'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-black text-white shadow-sm'
+                : 'text-slate-600 hover:text-black'
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
@@ -180,8 +177,8 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             onClick={() => handleRoleChange('admin')}
             className={`py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               role === 'admin'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-black text-white shadow-sm'
+                : 'text-slate-600 hover:text-black'
             }`}
           >
             <Building className="w-3.5 h-3.5" />
@@ -193,8 +190,8 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             onClick={() => handleRoleChange('superadmin')}
             className={`py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               role === 'superadmin'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-black text-white shadow-sm'
+                : 'text-slate-600 hover:text-black'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -209,7 +206,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           {authMode === 'signup' && (
             <>
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <div className="relative">
@@ -222,14 +219,14 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Rahul Sharma"
-                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-black font-medium"
                   />
                 </div>
               </div>
 
               {role === 'student' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Student Roll Number
                   </label>
                   <input
@@ -238,20 +235,20 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
                     value={rollNo}
                     onChange={(e) => setRollNo(e.target.value)}
                     placeholder="e.g. 2024CS104"
-                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-black font-medium"
                   />
                 </div>
               )}
 
               {role === 'admin' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Assigned Department
                   </label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-black font-medium"
                   >
                     <option value="Hostel Administration">Hostel Administration & Warden</option>
                     <option value="Academic Office">Academic & Exam Branch</option>
@@ -266,7 +263,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           
           {/* Email Field */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               College Email / ID
             </label>
             <div className="relative">
@@ -279,7 +276,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@campus.edu"
-                className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500 font-medium"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-black placeholder-slate-400 font-medium"
               />
             </div>
           </div>
@@ -287,11 +284,11 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           {/* Password Field */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Password
               </label>
               {authMode === 'login' && (
-                <span className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium">
+                <span className="text-[11px] text-slate-700 hover:underline cursor-pointer font-semibold">
                   Forgot password?
                 </span>
               )}
@@ -306,12 +303,12 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-slate-50 dark:bg-[#182338] border border-slate-300 dark:border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-black font-medium"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-black"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -322,7 +319,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 rounded-xl bg-black hover:bg-slate-800 text-white font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <span className="animate-pulse">Authenticating...</span>
@@ -339,10 +336,10 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
         <div className="space-y-3 pt-2">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+              <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-[11px] uppercase tracking-wider font-bold">
-              <span className="bg-white dark:bg-[#121B2D] px-3 text-slate-500 dark:text-slate-400">
+              <span className="bg-white px-3 text-slate-500">
                 Or continue with
               </span>
             </div>
@@ -353,7 +350,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             <button
               type="button"
               onClick={() => handleOpenOAuthModal('google')}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -368,9 +365,9 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             <button
               type="button"
               onClick={() => handleOpenOAuthModal('apple')}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
-              <svg className="w-4 h-4 fill-current text-slate-900 dark:text-white" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current text-black" viewBox="0 0 24 24">
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.82c.67-.82 1.13-1.97.99-3.12-1 .04-2.19.67-2.88 1.47-.62.72-1.16 1.89-.99 3.01 1.11.09 2.22-.54 2.88-1.36z"/>
               </svg>
               <span>Apple</span>
@@ -380,7 +377,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
             <button
               type="button"
               onClick={() => handleOpenOAuthModal('azure')}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white dark:bg-[#182338] hover:bg-slate-100 dark:hover:bg-[#1E2C46] border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 23 23">
                 <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -398,7 +395,7 @@ export default function LoginPage({ initialAuthMode = 'login', onLoginSuccess, o
           <div className="text-center pt-2">
             <button
               onClick={onCancel}
-              className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-medium cursor-pointer"
+              className="text-xs text-slate-500 hover:text-black transition-colors font-medium cursor-pointer"
             >
               ← Return to Campus Connect Overview
             </button>
