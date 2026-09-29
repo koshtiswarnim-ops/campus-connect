@@ -20,12 +20,12 @@ export default function App() {
   const [activeView, setActiveView] = useState(() => {
     const path = window.location.pathname;
     const hash = window.location.hash;
-    if (path === '/privacy' || path === '/privacy/' || hash === '#privacy') {
+    if (path.includes('privacy') || hash === '#privacy') {
       return 'privacy';
     }
     return 'landing';
   }); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile' | 'privacy'
-  
+
   // Persistent Queries State with localStorage fallback
   const [queries, setQueries] = useState(() => {
     const saved = localStorage.getItem('campus_connect_queries');
@@ -55,7 +55,7 @@ export default function App() {
     const handleLocationChange = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
-      if (path === '/privacy' || path === '/privacy/' || hash === '#privacy') {
+      if (path.includes('privacy') || hash === '#privacy') {
         setActiveView('privacy');
       } else if (path === '/' || path === '') {
         setActiveView(prev => (prev === 'privacy' ? 'landing' : prev));
@@ -69,6 +69,7 @@ export default function App() {
       window.removeEventListener('hashchange', handleLocationChange);
     };
   }, []);
+
 
   // Set document title dynamically
   useEffect(() => {
