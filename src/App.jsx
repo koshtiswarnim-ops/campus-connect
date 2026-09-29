@@ -10,13 +10,17 @@ import LoginPage from './components/LoginPage';
 import BottomNav from './components/BottomNav';
 import UserProfile from './components/UserProfile';
 import BusTracker from './components/BusTracker';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import { INITIAL_QUERIES } from './data/mockData';
 import { authService } from './services/authService';
 import { isRealSupabaseConfigured } from './services/supabaseClient';
 import { ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  const [activeView, setActiveView] = useState('landing'); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile'
+  const [activeView, setActiveView] = useState(() => {
+    if (window.location.hash === '#privacy') return 'privacy';
+    return 'landing';
+  }); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile' | 'privacy'
   
   // Persistent Queries State with localStorage fallback
   const [queries, setQueries] = useState(() => {
@@ -42,8 +46,25 @@ export default function App() {
     localStorage.setItem('campus_connect_queries', JSON.stringify(queries));
   }, [queries]);
 
+  // Listen to hash changes for direct URL privacy link
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#privacy') {
+        setActiveView('privacy');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   // View Navigation Handler with RBAC Authorization Guard
   const handleViewChange = (targetView) => {
+    if (targetView === 'privacy') {
+      window.location.hash = 'privacy';
+    } else if (window.location.hash === '#privacy') {
+      window.history.pushState("", document.title, window.location.pathname + window.location.search);
+    }
+
     if (targetView === 'admin' || targetView.startsWith('admin-')) {
       const isAllowed = authService.isAuthorizedForView(currentUser, 'admin');
       if (!isAllowed) {
@@ -242,7 +263,59 @@ export default function App() {
             onBack={() => handleViewChange('student')}
           />
         )}
+
+        {activeView === 'privacy' && (
+          <PrivacyPolicy
+            onBack={() => handleViewChange('landing')}
+            onNavigateToModule={(mod) => handleViewChange(mod)}
+          />
+        )}
       </main>
+
+      {/* Footer Navigation Bar */}
+      <footer className="bg-gray-50 border-t border-gray-200 py-8 px-4 sm:px-6 lg:px-8 mt-12 text-xs text-gray-600">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-black text-white font-extrabold flex items-center justify-center text-[10px]">
+              CC
+            </div>
+            <span className="font-bold text-black text-sm">Campus Connect</span>
+            <span className="text-gray-400">| Smart Campus Communication Platform</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 font-semibold">
+            <button
+              onClick={() => handleViewChange('landing')}
+              className="hover:text-black transition-colors cursor-pointer"
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => handleViewChange('student')}
+              className="hover:text-black transition-colors cursor-pointer"
+            >
+              Student Portal
+            </button>
+            <button
+              onClick={() => handleViewChange('bus')}
+              className="hover:text-black transition-colors cursor-pointer"
+            >
+              Bus GPS
+            </button>
+            <button
+              onClick={() => handleViewChange('privacy')}
+              className="text-black underline font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <Lock className="w-3 h-3 text-amber-500" />
+              <span>Privacy Policy</span>
+            </button>
+          </div>
+
+          <div className="text-gray-500 text-[11px]">
+            © 2026 Campus Connect Inc. All rights reserved.
+          </div>
+        </div>
+      </footer>
 
       {/* Mobile Bottom Navigation */}
       <BottomNav
