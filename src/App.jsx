@@ -18,7 +18,11 @@ import { ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [activeView, setActiveView] = useState(() => {
-    if (window.location.hash === '#privacy') return 'privacy';
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    if (path === '/privacy' || path === '/privacy/' || hash === '#privacy') {
+      return 'privacy';
+    }
     return 'landing';
   }); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile' | 'privacy'
   
@@ -46,23 +50,45 @@ export default function App() {
     localStorage.setItem('campus_connect_queries', JSON.stringify(queries));
   }, [queries]);
 
-  // Listen to hash changes for direct URL privacy link
+  // Listen to browser navigation & popstate / hashchange events for /privacy
   useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === '#privacy') {
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path === '/privacy' || path === '/privacy/' || hash === '#privacy') {
         setActiveView('privacy');
+      } else if (path === '/' || path === '') {
+        setActiveView(prev => (prev === 'privacy' ? 'landing' : prev));
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
+
+  // Set document title dynamically
+  useEffect(() => {
+    if (activeView === 'privacy') {
+      document.title = "Campus Connect | Privacy Policy";
+    } else {
+      document.title = "Campus Connect — Smart Campus Communication & Service Platform";
+    }
+  }, [activeView]);
 
   // View Navigation Handler with RBAC Authorization Guard
   const handleViewChange = (targetView) => {
     if (targetView === 'privacy') {
-      window.location.hash = 'privacy';
-    } else if (window.location.hash === '#privacy') {
-      window.history.pushState("", document.title, window.location.pathname + window.location.search);
+      if (window.location.pathname !== '/privacy') {
+        window.history.pushState({}, '', '/privacy');
+      }
+    } else {
+      if (window.location.pathname === '/privacy') {
+        window.history.pushState({}, '', '/');
+      }
     }
 
     if (targetView === 'admin' || targetView.startsWith('admin-')) {
@@ -302,13 +328,17 @@ export default function App() {
             >
               Bus GPS
             </button>
-            <button
-              onClick={() => handleViewChange('privacy')}
+            <a
+              href="/privacy"
+              onClick={(e) => {
+                e.preventDefault();
+                handleViewChange('privacy');
+              }}
               className="text-black underline font-bold flex items-center gap-1 cursor-pointer"
             >
               <Lock className="w-3 h-3 text-amber-500" />
               <span>Privacy Policy</span>
-            </button>
+            </a>
           </div>
 
           <div className="text-gray-500 text-[11px]">
