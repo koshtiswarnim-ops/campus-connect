@@ -11,20 +11,25 @@ import BottomNav from './components/BottomNav';
 import UserProfile from './components/UserProfile';
 import BusTracker from './components/BusTracker';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 import { INITIAL_QUERIES } from './data/mockData';
 import { authService } from './services/authService';
 import { isRealSupabaseConfigured } from './services/supabaseClient';
-import { ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Lock, CheckCircle2, FileText } from 'lucide-react';
 
 export default function App() {
   const [activeView, setActiveView] = useState(() => {
     const path = window.location.pathname;
     const hash = window.location.hash;
+    if (path.includes('terms') || hash === '#terms') {
+      return 'terms';
+    }
     if (path.includes('privacy') || hash === '#privacy') {
       return 'privacy';
     }
     return 'landing';
-  }); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile' | 'privacy'
+  }); // 'landing' | 'chat' | 'student' | 'tracking' | 'admin' | 'bus' | 'login' | 'profile' | 'privacy' | 'terms'
+
 
   // Persistent Queries State with localStorage fallback
   const [queries, setQueries] = useState(() => {
@@ -50,15 +55,17 @@ export default function App() {
     localStorage.setItem('campus_connect_queries', JSON.stringify(queries));
   }, [queries]);
 
-  // Listen to browser navigation & popstate / hashchange events for /privacy
+  // Listen to browser navigation & popstate / hashchange events for /privacy & /terms
   useEffect(() => {
     const handleLocationChange = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
-      if (path.includes('privacy') || hash === '#privacy') {
+      if (path.includes('terms') || hash === '#terms') {
+        setActiveView('terms');
+      } else if (path.includes('privacy') || hash === '#privacy') {
         setActiveView('privacy');
       } else if (path === '/' || path === '') {
-        setActiveView(prev => (prev === 'privacy' ? 'landing' : prev));
+        setActiveView(prev => (prev === 'privacy' || prev === 'terms' ? 'landing' : prev));
       }
     };
 
@@ -70,10 +77,11 @@ export default function App() {
     };
   }, []);
 
-
   // Set document title dynamically
   useEffect(() => {
-    if (activeView === 'privacy') {
+    if (activeView === 'terms') {
+      document.title = "Campus Connect | Terms of Service";
+    } else if (activeView === 'privacy') {
       document.title = "Campus Connect | Privacy Policy";
     } else {
       document.title = "Campus Connect — Smart Campus Communication & Service Platform";
@@ -82,15 +90,20 @@ export default function App() {
 
   // View Navigation Handler with RBAC Authorization Guard
   const handleViewChange = (targetView) => {
-    if (targetView === 'privacy') {
+    if (targetView === 'terms') {
+      if (window.location.pathname !== '/terms') {
+        window.history.pushState({}, '', '/terms');
+      }
+    } else if (targetView === 'privacy') {
       if (window.location.pathname !== '/privacy') {
         window.history.pushState({}, '', '/privacy');
       }
     } else {
-      if (window.location.pathname === '/privacy') {
+      if (window.location.pathname === '/privacy' || window.location.pathname === '/terms') {
         window.history.pushState({}, '', '/');
       }
     }
+
 
     if (targetView === 'admin' || targetView.startsWith('admin-')) {
       const isAllowed = authService.isAuthorizedForView(currentUser, 'admin');
@@ -297,6 +310,13 @@ export default function App() {
             onNavigateToModule={(mod) => handleViewChange(mod)}
           />
         )}
+
+        {activeView === 'terms' && (
+          <TermsOfService
+            onBack={() => handleViewChange('landing')}
+            onNavigateToModule={(mod) => handleViewChange(mod)}
+          />
+        )}
       </main>
 
       {/* Footer Navigation Bar */}
@@ -335,12 +355,24 @@ export default function App() {
                 e.preventDefault();
                 handleViewChange('privacy');
               }}
-              className="text-black underline font-bold flex items-center gap-1 cursor-pointer"
+              className="hover:text-black transition-colors flex items-center gap-1 cursor-pointer"
             >
               <Lock className="w-3 h-3 text-amber-500" />
               <span>Privacy Policy</span>
             </a>
+            <a
+              href="/terms"
+              onClick={(e) => {
+                e.preventDefault();
+                handleViewChange('terms');
+              }}
+              className="text-black underline font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <FileText className="w-3 h-3 text-black" />
+              <span>Terms of Service</span>
+            </a>
           </div>
+
 
           <div className="text-gray-500 text-[11px]">
             © 2026 Campus Connect Inc. All rights reserved.

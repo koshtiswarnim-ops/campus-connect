@@ -1,8 +1,9 @@
 import React from 'react';
 import { 
   Sparkles, User, ShieldCheck, ArrowRight, LogIn, LogOut, 
-  Menu, X, Bus, Lock 
+  Menu, X, Bus, Lock, FileText 
 } from 'lucide-react';
+
 
 export default function Navbar({ 
   activeView, 
@@ -134,6 +135,13 @@ export default function Navbar({
                       <span>Privacy Policy</span>
                     </button>
                     <button
+                      onClick={() => { setActiveView('terms'); setUserDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-slate-700" />
+                      <span>Terms of Service</span>
+                    </button>
+                    <button
                       onClick={() => { onLogout(); setUserDropdownOpen(false); }}
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-t border-slate-100 pt-1.5"
                     >
@@ -245,8 +253,18 @@ export default function Navbar({
           >
             Privacy Policy & Protection
           </button>
+
+          <button
+            onClick={() => { setActiveView('terms'); setMobileMenuOpen(false); }}
+            className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium ${
+              activeView === 'terms' ? 'bg-black text-white' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            Terms of Service
+          </button>
         </div>
       )}
+
     </header>
   );
 }
