@@ -1,18 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Environment variables or fallback demo project configuration
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://xyzcompany.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-anon-key';
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const isRealSupabaseConfigured = Boolean(
-  import.meta.env.VITE_SUPABASE_URL && 
-  import.meta.env.VITE_SUPABASE_ANON_KEY &&
-  !import.meta.env.VITE_SUPABASE_URL.includes('xyzcompany')
+  rawUrl && 
+  rawKey &&
+  !rawUrl.includes('xyzcompany') &&
+  rawUrl.startsWith('https://')
 );
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
+export const supabase = isRealSupabaseConfigured
+  ? createClient(rawUrl, rawKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    })
+  : {
+      auth: {
+        signInWithPassword: async () => ({ data: null, error: new Error('Supabase project credentials not configured.') }),
+        signUp: async () => ({ data: null, error: new Error('Supabase project credentials not configured.') }),
+        signInWithOAuth: async () => ({ data: null, error: new Error('Supabase project credentials not configured.') }),
+        signOut: async () => ({ error: null }),
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      }
+    };
